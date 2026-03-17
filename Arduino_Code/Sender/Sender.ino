@@ -79,7 +79,7 @@ void loop() {
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
 
   // Helpful debug to see if pots are working
-  // Serial.printf("P1: %d | P2: %d | P3: %d\n", myData.pot1, myData.pot2, myData.pot3);
+  Serial.printf("P1: %d | P2: %d | P3: %d\n", myData.pot1, myData.pot2, myData.pot3);
 
   // Delay for a stable framerate (e.g. 20ms = 50Hz)
   delay(20);
