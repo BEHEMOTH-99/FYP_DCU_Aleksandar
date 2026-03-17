@@ -1,5 +1,6 @@
 #include <esp_now.h>
 #include <WiFi.h>
+#include <esp_wifi.h> // Needed to force Channel 1
 
 // Pins for the Reverse TFT Feather (even without the screen)
 const int potPin1 = A0;
@@ -9,9 +10,9 @@ const int potPin3 = A2;
 uint8_t broadcastAddress[] = {0x48, 0x27, 0xE2, 0x61, 0x91, 0x8C};
 
 typedef struct struct_message {
-  int pot1;
-  int pot2;
-  int pot3;
+  int32_t pot1; // Must match Receiver exactly
+  int32_t pot2;
+  int32_t pot3;
 } struct_message;
 
 struct_message myData;
@@ -30,6 +31,10 @@ void setup() {
 
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
+  delay(100);
+
+  // Force Channel 1 to match the Receiver (critical for stable ESP-NOW link)
+  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
 
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
@@ -42,7 +47,7 @@ void setup() {
 
   // Register peer (the Receiver)
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-  peerInfo.channel = 0;  
+  peerInfo.channel = 1; // Must match esp_wifi_set_channel above  
   peerInfo.encrypt = false;
   
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
