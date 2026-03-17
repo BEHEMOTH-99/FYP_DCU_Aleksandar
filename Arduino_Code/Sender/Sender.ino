@@ -6,7 +6,7 @@ const int potPin1 = A0;
 const int potPin2 = A1;
 const int potPin3 = A2;
 
-uint8_t broadcastAddress[] = {0x90, 0xE5, 0xB1, 0xCB, 0x86, 0x18};
+uint8_t broadcastAddress[] = {0x48, 0x27, 0xE2, 0x61, 0x91, 0x8C};
 
 typedef struct struct_message {
   int pot1;
