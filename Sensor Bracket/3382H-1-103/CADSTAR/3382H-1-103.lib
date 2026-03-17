@@ -1,0 +1,16 @@
+.3382H-1-103 :1 ;Bourns 3382 Series Potentiometer, 10k, +/-30%, 0.05W, +/-500ppm/C, Through Hole
+"3382H1103"
+*STM VR
+*NGS
+*PLB 1="CCW" 2="WIPER" 3="CW" 4="4"
+*MXP 9
+*DFN 3382H-1-103
+~!Mouser Part Number (652-3382H-1-103)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Bourns/3382H-1-103?qs=stOsxiBwuZUbBRCWhmmq4g%3D%3D)
+~!Manufacturer_Name (Bourns)
+~!Manufacturer_Part_Number (3382H-1-103)
+~!Link Datasheet (https://www.bourns.com/pdfs/3382.pdf)
+~!Height (2.9mm)
+~!3D_Model (3382H-1-103)
+"3382H-1-103"
+1.1!U 2.1!U 3.1!U 4.1!U 
