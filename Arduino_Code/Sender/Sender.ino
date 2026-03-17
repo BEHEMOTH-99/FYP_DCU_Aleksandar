@@ -1,13 +1,12 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
-// Potentiometer pins on the ESP32 Feather
+// Pins for the Reverse TFT Feather (even without the screen)
 const int potPin1 = A0;
 const int potPin2 = A1;
 const int potPin3 = A2;
 
-// REPLACE THIS with the MAC Address of your ESP32-S3 Receiver
-uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t broadcastAddress[] = {0x90, 0xE5, 0xB1, 0xCB, 0x86, 0x18};
 
 typedef struct struct_message {
   int pot1;
@@ -26,6 +25,9 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 void setup() {
   Serial.begin(115200);
   
+  // REQUIRED for S3 Native USB to show Serial output
+  delay(1000);
+
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
@@ -58,7 +60,7 @@ void loop() {
 
   // Apply Exponential Moving Average (EMA) filter
   // Formula: new_filtered = (alpha * raw_value) + ((1 - alpha) * old_filtered)
-  // An alpha of 0.1 means we trust the old value 90% and the new value 10%
+  // An alpha of 0.15 means we trust the old value 85% and the new value 15%
   float alpha = 0.15; // Lower = smoother but slower response. Max 1.0 (no filter)
   
   static float filtered1 = raw1; // initialize with first reading
@@ -75,6 +77,9 @@ void loop() {
 
   // Send message via ESP-NOW
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+
+  // Helpful debug to see if pots are working
+  // Serial.printf("P1: %d | P2: %d | P3: %d\n", myData.pot1, myData.pot2, myData.pot3);
 
   // Delay for a stable framerate (e.g. 20ms = 50Hz)
   delay(20);
