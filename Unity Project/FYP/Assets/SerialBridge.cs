@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.IO.Ports;
 using System.Threading;
 
@@ -15,9 +16,21 @@ public class SerialBridge : MonoBehaviour
     private SerialPort serialPort;
     private Thread serialThread;
     private bool isRunning = false;
-    
-    // Shared variable for thread-safe transfer
-    private float targetGripStrength = 0f;
+
+    // Latency tracking
+    private bool baseTimeSet = false;
+    private uint baseSenderTime = 0;
+    private float baseUnityTime = 0f;
+    private float latencySum = 0f;
+    private int packetCount = 0;
+
+    // Latency Stopwatch (Thread Safe)
+    private System.Diagnostics.Stopwatch stopwatch;
+
+    // Thread-safe data passing (Updated for 9-float array)
+    private readonly object dataLock = new object();
+    private float[] latestAngles = null;
+    private bool hasNewData = false;
 
     void Start()
     {
@@ -27,6 +40,8 @@ public class SerialBridge : MonoBehaviour
             handController = GetComponent<AnatomicalHandController>();
         }
 
+        stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         OpenSerialPort();
     }
 
@@ -34,7 +49,6 @@ public class SerialBridge : MonoBehaviour
     {
         try
         {
-            // Note: If 'SerialPort' is not found, ensure your Unity project API Compatibility Level is set to '.NET Framework' (Edit -> Project Settings -> Player -> Other Settings -> Api Compatibility Level).
             serialPort = new SerialPort(portName, baudRate);
             serialPort.ReadTimeout = 50;
             serialPort.Open();
@@ -47,6 +61,27 @@ public class SerialBridge : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"[SerialBridge] Error opening serial port: {e.Message}");
+        }
+    }
+
+    void Update()
+    {
+        float[] dataToProcess = null;
+        
+        lock (dataLock)
+        {
+            if (hasNewData && latestAngles != null)
+            {
+                dataToProcess = latestAngles;
+                hasNewData = false;
+            }
+        }
+
+        // We process unity objects (Animation) on the MAIN THREAD safely!
+        // Note: GloveCalibration is bypassed as ESP32 sends degrees directly.
+        if (dataToProcess != null && handController != null)
+        {
+            handController.SetTargetInputs(dataToProcess);
         }
     }
 
@@ -66,31 +101,67 @@ public class SerialBridge : MonoBehaviour
 
     void ParseData(string dataLine)
     {
-        // Expected CSV format: "pot1,pot2,pot3" (0-4095)
         string[] values = dataLine.Trim().Split(',');
-        if (values.Length == 3)
+        
+        // Ensure we have at least some sensors and one timestamp
+        if (values.Length >= 2)
         {
-            if (int.TryParse(values[0], out int pot1) &&
-                int.TryParse(values[1], out int pot2) &&
-                int.TryParse(values[2], out int pot3))
+            int numSensors = values.Length - 1; // Last is always timestamp
+            string timestampStr = values[values.Length - 1];
+            
+            // --- LATENCY MEASUREMENT ---
+            if (uint.TryParse(timestampStr, out uint senderTime))
             {
-                // Map from 12-bit ADC (0-4095) to normalized values (0.0 - 1.0)
-                if (handController != null)
+                // Use Stopwatch instead of Time.realtimeSinceStartup to avoid Unity main thread errors
+                float unityTime = (float)stopwatch.Elapsed.TotalMilliseconds;
+                if (!baseTimeSet)
                 {
-                    handController.SetTargetInputs(
-                        Mathf.Clamp01(pot1 / 4095f), 
-                        Mathf.Clamp01(pot2 / 4095f), 
-                        Mathf.Clamp01(pot3 / 4095f)
-                    );
+                    baseSenderTime = senderTime;
+                    baseUnityTime = unityTime;
+                    baseTimeSet = true;
+                    latencySum = 0f;
+                    packetCount = 0;
+                }
+                else
+                {
+                    float expectedUnityTime = baseUnityTime + (senderTime - baseSenderTime);
+                    float latencyDelta = unityTime - expectedUnityTime;
+                    
+                    latencySum += latencyDelta;
+                    packetCount++;
+                    if (packetCount >= 50)
+                    {
+                        Debug.Log($"[Latency Target Delta] +{(latencySum / 50f):F2} ms (Fluctuation). Parsed {numSensors} sensors.");
+                        latencySum = 0;
+                        packetCount = 0;
+                    }
+                }
+            }
+
+            // --- HAND ANIMATION ---
+            int maxSensorsToRead = Mathf.Min(numSensors, 9); 
+            float[] tempAngles = new float[9];
+            
+            bool validParse = true;
+            for (int i = 0; i < maxSensorsToRead; i++)
+            {
+                if (!float.TryParse(values[i], out tempAngles[i]))
+                {
+                    validParse = false;
+                    break;
+                }
+            }
+
+            if (validParse)
+            {
+                // Save the data to be processed by the Main Thread in Update()
+                lock (dataLock)
+                {
+                    latestAngles = tempAngles;
+                    hasNewData = true;
                 }
             }
         }
-    }
-
-    void Update()
-    {
-        // The smoothing has been moved directly into the AnatomicalHandController
-        // to handle multiple joints cleanly.
     }
 
     void OnDestroy()

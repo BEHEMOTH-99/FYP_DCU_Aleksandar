@@ -796,6 +796,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8128668236925612103, guid: e866a680083119e4a998d6d4d0288153, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1458036244}
+    - targetCorrespondingSourceObject: {fileID: 8128668236925612103, guid: e866a680083119e4a998d6d4d0288153, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1458036247}
   m_SourcePrefab: {fileID: -5645937942226959685, guid: e866a680083119e4a998d6d4d0288153, type: 3}
 --- !u!1 &832575517
 GameObject:
@@ -878,15 +881,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7403d9d4e22addf42aeb7d033f14b414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnatomicalHandController
-  GripStrength: 0
-  anatomicalAxis: 0
-  invertDirection: 0
+  targetPIP: 0
+  targetMCP_Main: 0
+  targetMCP_Secondary: 0
+  currentPIP: 0
+  currentMCP_Main: 0
+  currentMCP_Secondary: 0
+  smoothingSpeed: 15
+  anatomicalAxisMain: 2
+  anatomicalAxisSecondary: 0
   index_prox_14: {fileID: 38057491}
   index_midd_13: {fileID: 1019581682}
   index_dist_12: {fileID: 1798240053}
   midd_prox_10: {fileID: 1064940399}
   midd_midd_9: {fileID: 162724711}
   midd_dist_8: {fileID: 954890950}
+--- !u!114 &1458036247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1458036243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f51387e12d2012f4f8448f0783263fac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SerialBridge
+  portName: COM3
+  baudRate: 115200
+  handController: {fileID: 1458036244}
 --- !u!4 &1798240053 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5733577812232998259, guid: e866a680083119e4a998d6d4d0288153, type: 3}
