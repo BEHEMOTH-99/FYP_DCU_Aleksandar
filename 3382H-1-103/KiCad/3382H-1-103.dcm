@@ -1,9 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP 3382H-1-103
-D Bourns 3382 Series Potentiometer, 10k, +/-30%, 0.05W, +/-500ppm/C, Through Hole
-K
-F https://www.bourns.com/pdfs/3382.pdf
-$ENDCMP
-#
-#End Doc Library

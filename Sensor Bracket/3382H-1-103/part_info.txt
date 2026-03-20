@@ -1,9 +1,0 @@
-Manufacturer=Bourns
-PartNumber=3382H-1-103
-PartCategory=Variable Resistor
-PackageCategory=Other
-PinCount=4
-Version=1.1
-Released=2019-01-28 20:46:38
-Downloaded=2026-01-21 16:13:42
-3D=Y
